@@ -28,27 +28,32 @@ def remove_chars_from_text(text, chars):
 def parse_indeed():
     main_url = 'https://russia.trud.com'
     vacancies_url = 'jobs/'
-    q = 'administrator_baz_dannih'  # Задаем интересующее название вакансии
+    q = 'team_lead'  # Задаем интересующее название вакансии
     url = main_url + '/' + vacancies_url + q;
     print(url)
     word_list = {"":0}
-    for page in range(1,150):
-        word_list = parse_vacancy_links(url+'/page/'+str(page), word_list)
-    link_list_to_csv(word_list,q)
+    for page in range(1,30):
+        word_list = parse_vacancy_links(url+'/page/'+str(page), word_list)   
+    print(word_list)
+    link_list_to_csv(word_list, q)
 
 def get_content(url):
-    return requests.get(url).content.decode()
+    con = requests.get(url).content.decode()
+    return con
 
 def parse_vacancy_links(url, word_list):
     print(url)
     cnt = get_content(url) 
-    find_urls = re.compile(r"class=\"item-description\">(.*?)<!")
+    find_urls = re.compile(r"class=\"(item-description|job-card__description)\">(.*?)<(!|\/)")
     matches = find_urls.finditer(cnt, re.MULTILINE)    
-    for match in matches:
-        text = match.group(1)
+    for match in matches:        
+        text = match.group(2)
         text = text.lower()
         text = remove_chars_from_text(text, spec_chars)
         text = remove_chars_from_text(text, string.digits)
+        if "span" in text or "class" in text:
+            continue
+        print(text)
         add_words(text.split(), word_list)
     return word_list
 
@@ -63,3 +68,4 @@ def link_list_to_csv(link_list, q):
             counter = counter + 1
 
 parse_indeed()
+input()
